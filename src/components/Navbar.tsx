@@ -1,8 +1,9 @@
 "use client";
 
 import React from "react";
-import { Map, Trophy, Image as ImageIcon, Sparkles, RotateCcw } from "lucide-react";
-import { ViewMode } from "@/types";
+import { Map, Trophy, Image as ImageIcon, Sparkles, RotateCcw, Sun, Moon } from "lucide-react";
+import { ViewMode, Language } from "@/types";
+import { translations, toBanglaNumber } from "@/utils/i18n";
 
 interface NavbarProps {
   mode: ViewMode;
@@ -11,6 +12,10 @@ interface NavbarProps {
   totalCount: number;
   onResetRevealed: () => void;
   onOpenReference: () => void;
+  language: Language;
+  onLanguageChange: (lang: Language) => void;
+  theme: "light" | "dark";
+  onToggleTheme: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -19,90 +24,111 @@ export const Navbar: React.FC<NavbarProps> = ({
   revealedCount,
   totalCount,
   onResetRevealed,
-  onOpenReference
+  onOpenReference,
+  language,
+  onLanguageChange,
+  theme,
+  onToggleTheme
 }) => {
+  const t = translations[language];
+
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-slate-200 bg-white/95 backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/95 shadow-xs">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
+    <header className="sticky top-0 z-40 w-full border-b border-slate-200 bg-white/95 backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/95 shadow-xs transition-colors">
+      <div className="mx-auto flex max-w-[1580px] items-center justify-between px-2.5 py-2 sm:px-6">
         {/* Brand & Title */}
-        <div className="flex items-center gap-3">
-          <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white shadow-md shadow-emerald-500/20">
-            <span className="text-xl">🇧🇩</span>
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <div className="relative flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white shadow-md shadow-emerald-500/20 text-base sm:text-xl shrink-0">
+            🇧🇩
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-lg font-bold tracking-tight text-slate-900 dark:text-white sm:text-xl">
-                Learn Bangladesh
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <h1 className="text-sm font-bold tracking-tight text-slate-900 dark:text-white sm:text-xl truncate max-w-[120px] xs:max-w-none">
+                {t.title}
               </h1>
-              <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
-                64 Districts
+              <span className="hidden sm:inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                {language === "bn" ? `${toBanglaNumber(64)}টি জেলা` : "64 Districts"}
               </span>
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 hidden sm:block">
-              Interactive Map • Click any city to reveal its name
-            </p>
           </div>
         </div>
 
-        {/* Mode Switcher & Actions */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        {/* Mode Switcher, Language Toggle, Theme Toggle & Actions */}
+        <div className="flex items-center gap-1 sm:gap-2.5 shrink-0">
+          {/* Light / Dark Mode Toggle Button */}
+          <button
+            onClick={onToggleTheme}
+            className="flex items-center justify-center h-7 w-7 sm:h-8 sm:w-8 rounded-lg border border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-amber-400 dark:hover:bg-slate-700 transition-colors shadow-2xs cursor-pointer shrink-0"
+            title={theme === "dark" ? t.switchToLight : t.switchToDark}
+            aria-label="Toggle theme"
+          >
+            {theme === "dark" ? (
+              <Sun className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-amber-400 animate-in spin-in-90 duration-300" />
+            ) : (
+              <Moon className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-slate-700 animate-in spin-in-90 duration-300" />
+            )}
+          </button>
+
+          {/* Language Switcher Button */}
+          <div className="flex items-center rounded-lg border border-slate-200 bg-slate-50 p-0.5 dark:border-slate-700 dark:bg-slate-800 shadow-2xs shrink-0">
+            <button
+              onClick={() => onLanguageChange("en")}
+              className={`rounded-md px-1.5 sm:px-2 py-0.5 sm:py-1 text-[11px] sm:text-xs font-bold transition-all cursor-pointer ${
+                language === "en"
+                  ? "bg-white text-emerald-700 shadow-xs dark:bg-slate-700 dark:text-emerald-300"
+                  : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white"
+              }`}
+            >
+              EN
+            </button>
+            <button
+              onClick={() => onLanguageChange("bn")}
+              className={`rounded-md px-1.5 sm:px-2 py-0.5 sm:py-1 text-[11px] sm:text-xs font-bold transition-all cursor-pointer ${
+                language === "bn"
+                  ? "bg-white text-emerald-700 shadow-xs dark:bg-slate-700 dark:text-emerald-300"
+                  : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white"
+              }`}
+            >
+              বাং
+            </button>
+          </div>
+
           {/* Mode Tabs */}
-          <div className="flex rounded-lg bg-slate-100 p-1 dark:bg-slate-800">
+          <div className="flex rounded-lg bg-slate-100 p-0.5 sm:p-1 dark:bg-slate-800 shrink-0">
             <button
               onClick={() => onModeChange("explore")}
-              className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all sm:text-sm ${
+              className={`flex items-center gap-1 sm:gap-1.5 rounded-md px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-medium transition-all cursor-pointer ${
                 mode === "explore"
                   ? "bg-white text-emerald-700 shadow-xs dark:bg-slate-700 dark:text-emerald-300 font-semibold"
                   : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
               }`}
             >
-              <Map className="h-4 w-4" />
-              <span>Explore Map</span>
+              <Map className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+              <span>{t.exploreMode}</span>
             </button>
             <button
               onClick={() => onModeChange("quiz")}
-              className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all sm:text-sm ${
+              className={`flex items-center gap-1 sm:gap-1.5 rounded-md px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-medium transition-all cursor-pointer ${
                 mode === "quiz"
                   ? "bg-white text-emerald-700 shadow-xs dark:bg-slate-700 dark:text-emerald-300 font-semibold"
                   : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
               }`}
             >
-              <Trophy className="h-4 w-4 text-amber-500" />
-              <span>Quiz Mode</span>
+              <Trophy className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-amber-500 shrink-0" />
+              <span className="font-semibold">{t.quizMode}</span>
             </button>
           </div>
-
-          {/* Revealed stats pill in explore mode */}
-          {mode === "explore" && (
-            <div className="hidden lg:flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs text-slate-600 dark:border-slate-800 dark:bg-slate-800/60 dark:text-slate-300">
-              <Sparkles className="h-3.5 w-3.5 text-amber-500" />
-              <span>
-                <strong className="text-slate-900 dark:text-white">{revealedCount}</strong> / {totalCount} Revealed
-              </span>
-              {revealedCount > 0 && (
-                <button
-                  onClick={onResetRevealed}
-                  title="Reset revealed labels"
-                  className="ml-1 text-slate-400 hover:text-rose-500 transition-colors"
-                >
-                  <RotateCcw className="h-3 w-3" />
-                </button>
-              )}
-            </div>
-          )}
 
           {/* Reference Image Button */}
           <button
             onClick={onOpenReference}
-            className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 transition-colors shadow-xs"
+            className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white p-1.5 sm:px-2.5 sm:py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 transition-colors shadow-xs cursor-pointer shrink-0"
             title="View original JPG reference map"
           >
-            <ImageIcon className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-            <span className="hidden sm:inline">Reference Map</span>
+            <ImageIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-emerald-600 dark:text-emerald-400" />
+            <span className="hidden md:inline">{t.referenceMap}</span>
           </button>
         </div>
       </div>
     </header>
   );
 };
-

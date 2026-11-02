@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -12,10 +12,25 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  themeColor: "#059669",
+};
+
 export const metadata: Metadata = {
   title: "Learn Bangladesh - Interactive Map of 64 Districts",
   description: "Interactive map of Bangladesh where users can click on any city/district to reveal its name, explore divisions, landmarks, and play geography quizzes.",
   keywords: ["Bangladesh map", "Bangladesh districts", "interactive map", "Dhaka", "Chittagong", "Sylhet", "Bangladesh cities"],
+  icons: {
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/favicon.ico", sizes: "any" }
+    ],
+    shortcut: "/icon.svg",
+    apple: "/icon.svg"
+  }
 };
 
 export default function RootLayout({

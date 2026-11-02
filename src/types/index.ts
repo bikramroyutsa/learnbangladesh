@@ -16,8 +16,16 @@ export interface DistrictData {
 
 export type ViewMode = "explore" | "quiz";
 
-export interface QuizQuestion {
-  targetDistrict: DistrictData;
-  options: DistrictData[];
-}
+export type Language = "en" | "bn";
 
+export type SeterraAttemptResult = 1 | 2 | 3 | 0; // 1: 1st try, 2: 2nd try, 3: 3rd try, 0: missed (3 fails)
+
+export interface QuizResults {
+  scorePercent: number;
+  timeSeconds: number;
+  firstTryCount: number;
+  secondTryCount: number;
+  thirdTryCount: number;
+  missedCount: number;
+  totalQuestions: number;
+}
