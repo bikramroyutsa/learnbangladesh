@@ -128,7 +128,7 @@ export const DistrictInfoPanel: React.FC<DistrictInfoPanelProps> = ({
                   {language === "bn" ? district.bnName : district.displayName}
                 </h2>
                 <button
-                  onClick={() => speakDistrictName(district.displayName, district.bnName)}
+                  onClick={() => speakDistrictName(district.id, district.bnName, language)}
                   title="Listen pronunciation"
                   className="rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-emerald-600 dark:hover:bg-slate-800 dark:hover:text-emerald-400 transition-colors cursor-pointer"
                 >

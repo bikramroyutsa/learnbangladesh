@@ -1,6 +1,7 @@
-// Simple Web Audio API sound effects and Voice Pronunciation
+// Studio-quality natural audio pronunciations and sound effects
 
 let audioCtx: AudioContext | null = null;
+let currentPronunciationAudio: HTMLAudioElement | null = null;
 
 function getAudioContext(): AudioContext | null {
   if (typeof window === "undefined") return null;
@@ -34,7 +35,7 @@ export function playRevealSound() {
     osc.start();
     osc.stop(ctx.currentTime + 0.15);
   } catch {
-    // Ignore audio errors on autoplay restrictions
+    // Ignore audio errors
   }
 }
 
@@ -81,42 +82,60 @@ export function playErrorSound() {
   }
 }
 
-// Pronounce district name in voice using SpeechSynthesis
-export function speakDistrictName(name: string, bnName?: string, lang: "en" | "bn" = "en") {
+function fallbackSpeechSynthesis(name: string, bnName?: string, lang: "en" | "bn" = "en") {
   if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
-
   try {
     window.speechSynthesis.cancel();
-
-    // In Bengali mode, if bnName exists, pronounce the Bengali name
     const textToSpeak = lang === "bn" && bnName ? bnName : name;
     const utterance = new SpeechSynthesisUtterance(textToSpeak);
-
     const voices = window.speechSynthesis.getVoices();
     if (lang === "bn") {
       const bnVoice = voices.find(
         (v) => v.lang.startsWith("bn") || v.lang === "bn-BD" || v.lang === "bn-IN"
       );
-      if (bnVoice) {
-        utterance.voice = bnVoice;
-        utterance.lang = bnVoice.lang;
-      } else {
-        utterance.lang = "bn-BD";
-      }
+      if (bnVoice) utterance.voice = bnVoice;
+      utterance.lang = "bn-BD";
     } else {
       const enVoice = voices.find((v) => v.lang.startsWith("en"));
-      if (enVoice) {
-        utterance.voice = enVoice;
-        utterance.lang = enVoice.lang;
-      } else {
-        utterance.lang = "en-US";
-      }
+      if (enVoice) utterance.voice = enVoice;
+      utterance.lang = "en-US";
     }
-
-    utterance.rate = 0.88;
-    utterance.pitch = 1.0;
+    utterance.rate = 0.9;
     window.speechSynthesis.speak(utterance);
   } catch {
-    // Speech synthesis error fallback
+    // Ignore fallback errors
+  }
+}
+
+// Pronounce city name using crystal-clear natural native neural studio audio
+export function speakDistrictName(
+  districtIdOrName: string,
+  bnName?: string,
+  lang: "en" | "bn" = "en"
+) {
+  if (typeof window === "undefined") return;
+
+  // Convert name or id into safe slug
+  const slug = districtIdOrName.toLowerCase().replace(/[^a-z0-9]/g, "-");
+  const audioSrc = `/audio/${lang}/${slug}.mp3`;
+
+  try {
+    if (currentPronunciationAudio) {
+      currentPronunciationAudio.pause();
+      currentPronunciationAudio.currentTime = 0;
+    }
+
+    const audio = new Audio(audioSrc);
+    audio.volume = 1.0;
+    currentPronunciationAudio = audio;
+
+    const playPromise = audio.play();
+    if (playPromise !== undefined) {
+      playPromise.catch(() => {
+        fallbackSpeechSynthesis(districtIdOrName, bnName, lang);
+      });
+    }
+  } catch {
+    fallbackSpeechSynthesis(districtIdOrName, bnName, lang);
   }
 }

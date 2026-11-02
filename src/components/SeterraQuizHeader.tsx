@@ -177,7 +177,7 @@ export const SeterraQuizHeader: React.FC<SeterraQuizHeaderProps> = ({
 
             {/* Pronunciation Voice Speaker Button */}
             <button
-              onClick={() => speakDistrictName(targetDistrict.displayName, targetDistrict.bnName, language)}
+              onClick={() => speakDistrictName(targetDistrict.id, targetDistrict.bnName, language)}
               className="rounded-full p-2 text-emerald-600 hover:bg-emerald-100/80 dark:text-emerald-400 dark:hover:bg-emerald-950/80 transition-all cursor-pointer shadow-xs hover:scale-110 active:scale-95 bg-emerald-50 dark:bg-emerald-950/40"
               title={language === "bn" ? "ভয়েস শুনুন (উচ্চারণ)" : "Listen to city voice pronunciation"}
               aria-label="Listen to city voice pronunciation"

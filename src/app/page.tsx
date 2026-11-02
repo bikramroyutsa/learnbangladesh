@@ -328,7 +328,7 @@ export default function Home() {
   // Automatically pronounce city name in voice when target changes in Quiz mode
   useEffect(() => {
     if (mode === "quiz" && autoVoice && currentTargetDistrict) {
-      speakDistrictName(currentTargetDistrict.displayName, currentTargetDistrict.bnName, language);
+      speakDistrictName(currentTargetDistrict.id, currentTargetDistrict.bnName, language);
     }
   }, [mode, currentTargetDistrict?.id, autoVoice, language]);
 
