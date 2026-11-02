@@ -1,11 +1,13 @@
-// Simple Web Audio API sound effects without external assets
+// Simple Web Audio API sound effects and Voice Pronunciation
 
 let audioCtx: AudioContext | null = null;
 
 function getAudioContext(): AudioContext | null {
   if (typeof window === "undefined") return null;
   if (!audioCtx) {
-    const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    const AudioContextClass =
+      window.AudioContext ||
+      (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
     if (AudioContextClass) {
       audioCtx = new AudioContextClass();
     }
@@ -79,12 +81,42 @@ export function playErrorSound() {
   }
 }
 
-export function speakDistrictName(name: string, bnName?: string) {
+// Pronounce district name in voice using SpeechSynthesis
+export function speakDistrictName(name: string, bnName?: string, lang: "en" | "bn" = "en") {
   if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
-  window.speechSynthesis.cancel();
-  const utterance = new SpeechSynthesisUtterance(name);
-  utterance.rate = 0.9;
-  utterance.pitch = 1.0;
-  window.speechSynthesis.speak(utterance);
-}
 
+  try {
+    window.speechSynthesis.cancel();
+
+    // In Bengali mode, if bnName exists, pronounce the Bengali name
+    const textToSpeak = lang === "bn" && bnName ? bnName : name;
+    const utterance = new SpeechSynthesisUtterance(textToSpeak);
+
+    const voices = window.speechSynthesis.getVoices();
+    if (lang === "bn") {
+      const bnVoice = voices.find(
+        (v) => v.lang.startsWith("bn") || v.lang === "bn-BD" || v.lang === "bn-IN"
+      );
+      if (bnVoice) {
+        utterance.voice = bnVoice;
+        utterance.lang = bnVoice.lang;
+      } else {
+        utterance.lang = "bn-BD";
+      }
+    } else {
+      const enVoice = voices.find((v) => v.lang.startsWith("en"));
+      if (enVoice) {
+        utterance.voice = enVoice;
+        utterance.lang = enVoice.lang;
+      } else {
+        utterance.lang = "en-US";
+      }
+    }
+
+    utterance.rate = 0.88;
+    utterance.pitch = 1.0;
+    window.speechSynthesis.speak(utterance);
+  } catch {
+    // Speech synthesis error fallback
+  }
+}

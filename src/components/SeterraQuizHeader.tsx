@@ -1,10 +1,11 @@
 "use client";
 
 import React from "react";
-import { Clock, Target, RotateCcw, Flag, Layers } from "lucide-react";
+import { Clock, Target, RotateCcw, Flag, Layers, Volume2, VolumeX } from "lucide-react";
 import { DistrictData, Language } from "@/types";
 import { DivisionName, DIVISIONS } from "@/data/districtsData";
 import { translations, toBanglaNumber, DIVISION_BN } from "@/utils/i18n";
+import { speakDistrictName } from "@/utils/audio";
 
 interface SeterraQuizHeaderProps {
   targetDistrict: DistrictData | null;
@@ -19,6 +20,8 @@ interface SeterraQuizHeaderProps {
   onRestart: () => void;
   onGiveUpCurrent: () => void;
   language: Language;
+  autoVoice: boolean;
+  onToggleAutoVoice: () => void;
 }
 
 export const SeterraQuizHeader: React.FC<SeterraQuizHeaderProps> = ({
@@ -33,7 +36,9 @@ export const SeterraQuizHeader: React.FC<SeterraQuizHeaderProps> = ({
   onSelectQuizDivision,
   onRestart,
   onGiveUpCurrent,
-  language = "en"
+  language = "en",
+  autoVoice = true,
+  onToggleAutoVoice
 }) => {
   const t = translations[language];
 
@@ -48,9 +53,9 @@ export const SeterraQuizHeader: React.FC<SeterraQuizHeaderProps> = ({
 
   return (
     <div className="rounded-2xl border border-slate-200 bg-white shadow-md dark:border-slate-800 dark:bg-slate-900 overflow-hidden mb-3 sm:mb-4">
-      {/* Top Toolbar - Mobile-friendly flex wrap */}
+      {/* Top Toolbar */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 border-b border-slate-100 bg-slate-50/80 px-3 sm:px-4 py-2 sm:py-2.5 dark:border-slate-800 dark:bg-slate-950/40 text-xs">
-        {/* Scope Selector & Quick Actions row on mobile */}
+        {/* Scope Selector & Quick Actions */}
         <div className="flex items-center justify-between sm:justify-start gap-2 w-full sm:w-auto">
           <div className="flex items-center gap-1.5 flex-1 sm:flex-initial">
             <span className="font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-1 text-[11px] sm:text-xs shrink-0">
@@ -71,8 +76,34 @@ export const SeterraQuizHeader: React.FC<SeterraQuizHeaderProps> = ({
             </select>
           </div>
 
-          {/* Actions (Restart & Give Up) */}
+          {/* Voice toggle, Restart & Give Up buttons */}
           <div className="flex items-center gap-1 shrink-0">
+            {/* Auto-Voice Pronunciation Toggle */}
+            <button
+              onClick={onToggleAutoVoice}
+              className={`flex items-center gap-1 rounded-md border px-2 py-1 text-[11px] font-semibold transition-colors cursor-pointer shadow-2xs ${
+                autoVoice
+                  ? "border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300"
+                  : "border-slate-200 bg-white text-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-500"
+              }`}
+              title={
+                autoVoice
+                  ? language === "bn" ? "ভয়েস উচ্চারণ চালু আছে (ক্লিক করে বন্ধ করুন)" : "Voice is ON (click to mute)"
+                  : language === "bn" ? "ভয়েস উচ্চারণ বন্ধ আছে (ক্লিক করে চালু করুন)" : "Voice is OFF (click to enable)"
+              }
+            >
+              {autoVoice ? (
+                <Volume2 className="h-3 w-3 text-emerald-600 dark:text-emerald-400 animate-pulse" />
+              ) : (
+                <VolumeX className="h-3 w-3" />
+              )}
+              <span className="hidden sm:inline">
+                {autoVoice
+                  ? language === "bn" ? "ভয়েস: চালু" : "Voice: On"
+                  : language === "bn" ? "ভয়েস: বন্ধ" : "Voice: Off"}
+              </span>
+            </button>
+
             <button
               onClick={onRestart}
               className="flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] font-semibold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 cursor-pointer shadow-2xs transition-colors"
@@ -94,7 +125,6 @@ export const SeterraQuizHeader: React.FC<SeterraQuizHeaderProps> = ({
 
         {/* Live Score, Time, Progress Stats chips */}
         <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-5 font-bold pt-1 sm:pt-0 border-t sm:border-t-0 border-slate-200/60 dark:border-slate-800">
-          {/* Score */}
           <div className="flex items-center gap-1 text-[11px] sm:text-xs">
             <Target className="h-3.5 w-3.5 text-emerald-500" />
             <span className="text-slate-500 dark:text-slate-400 font-medium">{t.score}</span>
@@ -103,7 +133,6 @@ export const SeterraQuizHeader: React.FC<SeterraQuizHeaderProps> = ({
             </span>
           </div>
 
-          {/* Timer */}
           <div className="flex items-center gap-1 text-[11px] sm:text-xs">
             <Clock className="h-3.5 w-3.5 text-sky-500" />
             <span className="text-slate-500 dark:text-slate-400 font-medium">{t.time}</span>
@@ -112,7 +141,6 @@ export const SeterraQuizHeader: React.FC<SeterraQuizHeaderProps> = ({
             </span>
           </div>
 
-          {/* Progress */}
           <div className="flex items-center gap-1 text-[11px] sm:text-xs">
             <span className="text-slate-500 dark:text-slate-400 font-medium">{t.progress}</span>
             <span className="text-slate-800 dark:text-slate-100">
@@ -131,10 +159,10 @@ export const SeterraQuizHeader: React.FC<SeterraQuizHeaderProps> = ({
         />
       </div>
 
-      {/* Main Seterra Prompt Banner */}
+      {/* Main Seterra Prompt Banner with Voice Speaker Button */}
       <div className="p-3 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-3">
         {targetDistrict ? (
-          <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-3 text-center sm:text-left">
+          <div className="flex items-center gap-3 text-center sm:text-left flex-wrap sm:flex-nowrap justify-center sm:justify-start">
             <span className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
               {t.clickOn}
             </span>
@@ -146,6 +174,16 @@ export const SeterraQuizHeader: React.FC<SeterraQuizHeaderProps> = ({
                 ({language === "bn" ? targetDistrict.displayName : targetDistrict.bnName})
               </span>
             </div>
+
+            {/* Pronunciation Voice Speaker Button */}
+            <button
+              onClick={() => speakDistrictName(targetDistrict.displayName, targetDistrict.bnName, language)}
+              className="rounded-full p-2 text-emerald-600 hover:bg-emerald-100/80 dark:text-emerald-400 dark:hover:bg-emerald-950/80 transition-all cursor-pointer shadow-xs hover:scale-110 active:scale-95 bg-emerald-50 dark:bg-emerald-950/40"
+              title={language === "bn" ? "ভয়েস শুনুন (উচ্চারণ)" : "Listen to city voice pronunciation"}
+              aria-label="Listen to city voice pronunciation"
+            >
+              <Volume2 className="h-5 w-5 sm:h-6 sm:w-6" />
+            </button>
           </div>
         ) : (
           <div className="text-base sm:text-lg font-bold text-emerald-600 dark:text-emerald-400">

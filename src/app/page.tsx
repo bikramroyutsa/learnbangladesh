@@ -11,7 +11,7 @@ import { SeterraCompletionModal } from "@/components/SeterraCompletionModal";
 import { ReferenceModal } from "@/components/ReferenceModal";
 import { DISTRICTS_DATA, DivisionName } from "@/data/districtsData";
 import { DistrictData, ViewMode, SeterraAttemptResult, QuizResults, Language } from "@/types";
-import { playSuccessSound, playErrorSound, playRevealSound } from "@/utils/audio";
+import { playSuccessSound, playErrorSound, playRevealSound, speakDistrictName } from "@/utils/audio";
 import { translations, toBanglaNumber, DIVISION_BN } from "@/utils/i18n";
 
 export default function Home() {
@@ -45,6 +45,7 @@ export default function Home() {
   const [flashingDistrictId, setFlashingDistrictId] = useState<string | null>(null);
   const [quizCompletedResults, setQuizCompletedResults] = useState<QuizResults | null>(null);
   const [isCompletionModalOpen, setIsCompletionModalOpen] = useState<boolean>(false);
+  const [autoVoice, setAutoVoice] = useState<boolean>(true);
   const infoPanelRef = useRef<HTMLDivElement | null>(null);
 
   const t = translations[language];
@@ -324,6 +325,13 @@ export default function Home() {
   const currentTargetDistrict =
     mode === "quiz" && currentQuizIndex < quizQueue.length ? quizQueue[currentQuizIndex] : null;
 
+  // Automatically pronounce city name in voice when target changes in Quiz mode
+  useEffect(() => {
+    if (mode === "quiz" && autoVoice && currentTargetDistrict) {
+      speakDistrictName(currentTargetDistrict.displayName, currentTargetDistrict.bnName, language);
+    }
+  }, [mode, currentTargetDistrict?.id, autoVoice, language]);
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col selection:bg-emerald-500 selection:text-white">
       {/* Top Navigation with Language Switcher & Theme Switcher */}
@@ -365,6 +373,8 @@ export default function Home() {
             onRestart={() => startQuiz(quizDivision)}
             onGiveUpCurrent={handleGiveUpCurrent}
             language={language}
+            autoVoice={autoVoice}
+            onToggleAutoVoice={() => setAutoVoice(!autoVoice)}
           />
         )}
 
