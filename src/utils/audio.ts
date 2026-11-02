@@ -82,31 +82,6 @@ export function playErrorSound() {
   }
 }
 
-function fallbackSpeechSynthesis(name: string, bnName?: string, lang: "en" | "bn" = "en") {
-  if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
-  try {
-    window.speechSynthesis.cancel();
-    const textToSpeak = lang === "bn" && bnName ? bnName : name;
-    const utterance = new SpeechSynthesisUtterance(textToSpeak);
-    const voices = window.speechSynthesis.getVoices();
-    if (lang === "bn") {
-      const bnVoice = voices.find(
-        (v) => v.lang.startsWith("bn") || v.lang === "bn-BD" || v.lang === "bn-IN"
-      );
-      if (bnVoice) utterance.voice = bnVoice;
-      utterance.lang = "bn-BD";
-    } else {
-      const enVoice = voices.find((v) => v.lang.startsWith("en"));
-      if (enVoice) utterance.voice = enVoice;
-      utterance.lang = "en-US";
-    }
-    utterance.rate = 0.9;
-    window.speechSynthesis.speak(utterance);
-  } catch {
-    // Ignore fallback errors
-  }
-}
-
 // Pronounce city name using crystal-clear natural native neural studio audio
 export function speakDistrictName(
   districtIdOrName: string,
@@ -114,6 +89,15 @@ export function speakDistrictName(
   lang: "en" | "bn" = "en"
 ) {
   if (typeof window === "undefined") return;
+
+  // Immediately cancel any legacy synthetic browser speech synthesis
+  try {
+    if ("speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+    }
+  } catch {
+    // Ignore error
+  }
 
   // Convert name or id into safe slug
   const slug = districtIdOrName.toLowerCase().replace(/[^a-z0-9]/g, "-");
@@ -132,10 +116,10 @@ export function speakDistrictName(
     const playPromise = audio.play();
     if (playPromise !== undefined) {
       playPromise.catch(() => {
-        fallbackSpeechSynthesis(districtIdOrName, bnName, lang);
+        // Silently handle autoplay restrictions or interruption; never use robotic synthesis
       });
     }
   } catch {
-    fallbackSpeechSynthesis(districtIdOrName, bnName, lang);
+    // Silently ignore audio playback errors
   }
 }
