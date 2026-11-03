@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import confetti from "canvas-confetti";
 import { ChevronDown, ChevronUp, Layers } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
@@ -11,7 +11,7 @@ import { SeterraCompletionModal } from "@/components/SeterraCompletionModal";
 import { ReferenceModal } from "@/components/ReferenceModal";
 import { DISTRICTS_DATA, DivisionName } from "@/data/districtsData";
 import { DistrictData, ViewMode, SeterraAttemptResult, QuizResults, Language } from "@/types";
-import { playSuccessSound, playErrorSound, playRevealSound, speakDistrictName } from "@/utils/audio";
+import { playSuccessSound, playErrorSound, speakDistrictName } from "@/utils/audio";
 import { translations, toBanglaNumber, DIVISION_BN } from "@/utils/i18n";
 
 export default function Home() {
@@ -52,14 +52,17 @@ export default function Home() {
 
   // Theme initialization and listener
   useEffect(() => {
-    const savedTheme = localStorage.getItem("theme") as "light" | "dark" | null;
-    if (savedTheme === "dark" || (!savedTheme && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
-      setTheme("dark");
-      document.documentElement.classList.add("dark");
-    } else {
-      setTheme("light");
-      document.documentElement.classList.remove("dark");
-    }
+    const timer = setTimeout(() => {
+      const savedTheme = localStorage.getItem("theme") as "light" | "dark" | null;
+      if (savedTheme === "dark" || (!savedTheme && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+        setTheme("dark");
+        document.documentElement.classList.add("dark");
+      } else {
+        setTheme("light");
+        document.documentElement.classList.remove("dark");
+      }
+    }, 0);
+    return () => clearTimeout(timer);
   }, []);
 
   const toggleTheme = () => {
@@ -84,7 +87,7 @@ export default function Home() {
   };
 
   // Start or restart Seterra Quiz
-  const startQuiz = (division: DivisionName = quizDivision) => {
+  const startQuiz = useCallback((division: DivisionName = quizDivision) => {
     const pool = districts.filter((d) => division === "All" || d.division === division);
     const shuffled = shuffleDistricts(pool);
     setQuizQueue(shuffled);
@@ -97,14 +100,17 @@ export default function Home() {
     setFlashingDistrictId(null);
     setQuizCompletedResults(null);
     setIsCompletionModalOpen(false);
-  };
+  }, [districts, quizDivision]);
 
-  // Switch to quiz mode starts quiz automatically
+  // Switch to quiz mode starts quiz automatically if queue is empty
   useEffect(() => {
-    if (mode === "quiz") {
-      startQuiz(quizDivision);
+    if (mode === "quiz" && quizQueue.length === 0) {
+      const timer = setTimeout(() => {
+        startQuiz(quizDivision);
+      }, 0);
+      return () => clearTimeout(timer);
     }
-  }, [mode]);
+  }, [mode, quizDivision, quizQueue.length, startQuiz]);
 
   // Stopwatch Timer effect for Seterra quiz
   useEffect(() => {
@@ -335,7 +341,7 @@ export default function Home() {
     if (mode === "quiz" && autoVoice && currentTargetDistrict) {
       speakDistrictName(currentTargetDistrict.id, currentTargetDistrict.bnName, language);
     }
-  }, [mode, currentTargetDistrict?.id, autoVoice, language]);
+  }, [mode, currentTargetDistrict, autoVoice, language]);
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col selection:bg-emerald-500 selection:text-white">

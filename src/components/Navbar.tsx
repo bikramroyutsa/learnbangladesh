@@ -1,16 +1,16 @@
 "use client";
 
 import React from "react";
-import { Map, Trophy, Image as ImageIcon, Sparkles, RotateCcw, Sun, Moon } from "lucide-react";
+import { Map, Trophy, Image as ImageIcon, Sun, Moon } from "lucide-react";
 import { ViewMode, Language } from "@/types";
 import { translations, toBanglaNumber } from "@/utils/i18n";
 
 interface NavbarProps {
   mode: ViewMode;
   onModeChange: (mode: ViewMode) => void;
-  revealedCount: number;
-  totalCount: number;
-  onResetRevealed: () => void;
+  revealedCount?: number;
+  totalCount?: number;
+  onResetRevealed?: () => void;
   onOpenReference: () => void;
   language: Language;
   onLanguageChange: (lang: Language) => void;
@@ -21,9 +21,6 @@ interface NavbarProps {
 export const Navbar: React.FC<NavbarProps> = ({
   mode,
   onModeChange,
-  revealedCount,
-  totalCount,
-  onResetRevealed,
   onOpenReference,
   language,
   onLanguageChange,

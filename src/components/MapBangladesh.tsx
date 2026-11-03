@@ -117,14 +117,17 @@ export const MapBangladesh: React.FC<MapBangladeshProps> = ({
 
   // Auto-focus division when starting or changing quiz division
   React.useEffect(() => {
-    if (isQuizMode && quizDivision) {
-      if (quizDivision === "All") {
-        setScale(1);
-        setPan({ x: 0, y: 0 });
-      } else {
-        handleFocusDivision();
+    const timer = setTimeout(() => {
+      if (isQuizMode && quizDivision) {
+        if (quizDivision === "All") {
+          setScale(1);
+          setPan({ x: 0, y: 0 });
+        } else {
+          handleFocusDivision();
+        }
       }
-    }
+    }, 0);
+    return () => clearTimeout(timer);
   }, [isQuizMode, quizDivision, handleFocusDivision]);
 
   // Mouse pan handlers
