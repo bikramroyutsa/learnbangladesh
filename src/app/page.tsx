@@ -137,6 +137,11 @@ export default function Home() {
     if (currentQuizIndex >= quizQueue.length) return;
     const target = quizQueue[currentQuizIndex];
 
+    // If quiz is scoped to a specific division, ignore clicks on districts outside that division
+    if (quizDivision !== "All" && clicked.division !== quizDivision) {
+      return;
+    }
+
     // If already solved, ignore
     if (quizResultsMap.has(clicked.id)) {
       return;
@@ -395,6 +400,7 @@ export default function Home() {
               language={language}
               // Seterra Quiz Mode props
               isQuizMode={mode === "quiz"}
+              quizDivision={quizDivision}
               quizResultsMap={quizResultsMap}
               flashingDistrictId={flashingDistrictId}
               onQuizDistrictClick={handleQuizDistrictClick}

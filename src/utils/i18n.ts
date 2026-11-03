@@ -93,6 +93,9 @@ export const translations = {
     subWatermark: "64 Districts • 8 Divisions",
     allBangladeshScope: "All Bangladesh (64 Districts)",
     divisionScopeSuffix: "Division",
+    practiceArea: "Practice Area:",
+    focusDivision: "Focus Division",
+    wholeMap: "Whole Map",
     switchToLight: "Switch to Light Mode",
     switchToDark: "Switch to Dark Mode"
   },
@@ -171,6 +174,9 @@ export const translations = {
     subWatermark: "৬৪ জেলা • ৮ বিভাগ",
     allBangladeshScope: "সমগ্র বাংলাদেশ (৬৪ জেলা)",
     divisionScopeSuffix: "বিভাগ",
+    practiceArea: "অনুশীলন অঞ্চল:",
+    focusDivision: "বিভাগ জুম",
+    wholeMap: "পুরো মানচিত্র",
     switchToLight: "লাইট মোড চালু করুন",
     switchToDark: "ডার্ক মোড চালু করুন"
   }

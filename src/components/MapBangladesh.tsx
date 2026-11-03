@@ -10,7 +10,8 @@ import {
   Search,
   Filter,
   Maximize2,
-  Minimize2
+  Minimize2,
+  Target
 } from "lucide-react";
 import { DistrictData, SeterraAttemptResult, Language } from "@/types";
 import { VIEWBOX_WIDTH, VIEWBOX_HEIGHT, DIVISIONS, DivisionName } from "@/data/districtsData";
@@ -30,6 +31,7 @@ interface MapBangladeshProps {
   language: Language;
   // Seterra Quiz Mode props
   isQuizMode?: boolean;
+  quizDivision?: DivisionName;
   quizResultsMap?: Map<string, SeterraAttemptResult>;
   flashingDistrictId?: string | null;
   onQuizDistrictClick?: (district: DistrictData) => void;
@@ -47,6 +49,7 @@ export const MapBangladesh: React.FC<MapBangladeshProps> = ({
   onSelectDivision,
   language = "en",
   isQuizMode = false,
+  quizDivision = "All",
   quizResultsMap = new Map(),
   flashingDistrictId = null,
   onQuizDistrictClick
@@ -78,6 +81,51 @@ export const MapBangladesh: React.FC<MapBangladeshProps> = ({
     setScale(1);
     setPan({ x: 0, y: 0 });
   };
+
+  // Focus on current active division
+  const handleFocusDivision = useCallback(() => {
+    const activeDiv = isQuizMode ? quizDivision : selectedDivision;
+    if (!activeDiv || activeDiv === "All") {
+      setScale(1);
+      setPan({ x: 0, y: 0 });
+      return;
+    }
+
+    const divDistricts = districts.filter((d) => d.division === activeDiv);
+    if (divDistricts.length === 0) return;
+
+    const minX = Math.min(...divDistricts.map((d) => d.bbox[0]));
+    const minY = Math.min(...divDistricts.map((d) => d.bbox[1]));
+    const maxX = Math.max(...divDistricts.map((d) => d.bbox[2]));
+    const maxY = Math.max(...divDistricts.map((d) => d.bbox[3]));
+
+    const width = maxX - minX;
+    const height = maxY - minY;
+    const centerX = (minX + maxX) / 2;
+    const centerY = (minY + maxY) / 2;
+
+    const scaleX = VIEWBOX_WIDTH / (width * 1.45);
+    const scaleY = VIEWBOX_HEIGHT / (height * 1.45);
+    const targetScale = Math.min(Math.max(Math.min(scaleX, scaleY), 1.25), 3.0);
+
+    const dx = (500 - centerX) * 0.52 * targetScale;
+    const dy = (715 - centerY) * 0.52 * targetScale;
+
+    setScale(targetScale);
+    setPan({ x: dx, y: dy });
+  }, [districts, isQuizMode, quizDivision, selectedDivision]);
+
+  // Auto-focus division when starting or changing quiz division
+  React.useEffect(() => {
+    if (isQuizMode && quizDivision) {
+      if (quizDivision === "All") {
+        setScale(1);
+        setPan({ x: 0, y: 0 });
+      } else {
+        handleFocusDivision();
+      }
+    }
+  }, [isQuizMode, quizDivision, handleFocusDivision]);
 
   // Mouse pan handlers
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -180,6 +228,15 @@ export const MapBangladesh: React.FC<MapBangladeshProps> = ({
         if (res === 3) return "#fdba74";
         if (res === 0) return "#fca5a5";
       }
+
+      // If quiz is scoped to a specific division
+      if (quizDivision && quizDivision !== "All") {
+        if (district.division === quizDivision) {
+          return "#e2e8f0"; // Active practice territory
+        }
+        return "#94a3b8"; // Outside dimmed territory
+      }
+
       return "#e2e8f0";
     }
 
@@ -200,6 +257,14 @@ export const MapBangladesh: React.FC<MapBangladeshProps> = ({
         if (res === 3) return "#ea580c";
         if (res === 0) return "#dc2626";
       }
+
+      if (quizDivision && quizDivision !== "All") {
+        if (district.division === quizDivision) {
+          return isHovered ? "#047857" : "#059669";
+        }
+        return "#64748b";
+      }
+
       return isHovered ? "#475569" : "#94a3b8";
     }
 
@@ -296,6 +361,18 @@ export const MapBangladesh: React.FC<MapBangladeshProps> = ({
             </button>
           </div>
 
+          {/* Focus Division Button */}
+          {((isQuizMode && quizDivision !== "All") || (!isQuizMode && selectedDivision !== "All")) && (
+            <button
+              onClick={handleFocusDivision}
+              className="flex items-center gap-1 rounded-lg border border-emerald-300 bg-emerald-50 px-2 py-1.5 text-xs font-semibold text-emerald-800 hover:bg-emerald-100 dark:border-emerald-700 dark:bg-emerald-950/70 dark:text-emerald-300 dark:hover:bg-emerald-900/60 transition-colors cursor-pointer shadow-2xs"
+              title={t.focusDivision}
+            >
+              <Target className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+              <span className="hidden xs:inline">{t.focusDivision}</span>
+            </button>
+          )}
+
           {/* Fullscreen Expand Button */}
           <button
             onClick={() => setIsFullscreen(!isFullscreen)}
@@ -365,6 +442,31 @@ export const MapBangladesh: React.FC<MapBangladeshProps> = ({
           </div>
         )}
 
+        {/* Active Quiz Division Indicator Badge */}
+        {isQuizMode && quizDivision && quizDivision !== "All" && (
+          <div className="absolute top-2 left-3 sm:top-3 sm:left-4 z-10 flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-white/95 px-3 py-1.5 shadow-md backdrop-blur-md dark:border-emerald-500/30 dark:bg-slate-900/90 animate-in fade-in duration-200">
+            <span className="relative flex h-2.5 w-2.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+            </span>
+            <div className="flex flex-col">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+                {t.practiceArea}
+              </span>
+              <span className="text-xs sm:text-sm font-black text-slate-900 dark:text-white">
+                {language === "bn" ? `${DIVISION_BN[quizDivision]} বিভাগ` : `${quizDivision} Division`}
+              </span>
+            </div>
+            <button
+              onClick={handleFocusDivision}
+              className="ml-1.5 rounded-lg bg-emerald-600 px-2 py-1 text-[11px] font-bold text-white hover:bg-emerald-700 transition-colors shadow-2xs cursor-pointer"
+              title={t.focusDivision}
+            >
+              {t.focusDivision}
+            </button>
+          </div>
+        )}
+
         {/* SVG Container */}
         <svg
           ref={svgRef}
@@ -382,18 +484,56 @@ export const MapBangladesh: React.FC<MapBangladeshProps> = ({
             <filter id="label-glow" x="-20%" y="-20%" width="140%" height="140%">
               <feDropShadow dx="0" dy="1" stdDeviation="2" floodOpacity="0.35" floodColor="#000000" />
             </filter>
+            <filter id="division-glow" x="-30%" y="-30%" width="160%" height="160%">
+              <feDropShadow dx="0" dy="0" stdDeviation="8" floodOpacity="0.8" floodColor="#10b981" />
+            </filter>
           </defs>
+
+          {/* Glowing contour highlighting the active quiz division */}
+          {isQuizMode && quizDivision && quizDivision !== "All" && (
+            <g className="pointer-events-none" filter="url(#division-glow)">
+              {districts
+                .filter((d) => d.division === quizDivision)
+                .map((d) => (
+                  <path
+                    key={`glow-${d.id}`}
+                    d={d.path}
+                    fill="none"
+                    stroke="#10b981"
+                    strokeWidth={8}
+                    strokeLinejoin="round"
+                    strokeLinecap="round"
+                    opacity={0.85}
+                  />
+                ))}
+            </g>
+          )}
 
           {/* Districts Vector Paths */}
           <g filter="url(#map-shadow)">
             {districts.map((district) => {
               const isSelected = selectedDistrict?.id === district.id;
               const isHovered = hoveredDistrict?.id === district.id;
-              const isDimmed =
-                !isQuizMode && selectedDivision !== "All" && district.division !== selectedDivision;
+              const activeDiv = isQuizMode ? quizDivision : selectedDivision;
+              const hasDivScope = activeDiv && activeDiv !== "All";
+              const isInsideDivision = hasDivScope ? district.division === activeDiv : true;
+              const isDimmed = hasDivScope && !isInsideDivision;
 
               const fillColor = getDistrictFill(district);
               const strokeColor = getDistrictStroke(district, isSelected, isHovered);
+
+              const strokeWidth =
+                flashingDistrictId === district.id
+                  ? 4
+                  : isSelected
+                  ? 3.5
+                  : isHovered
+                  ? 2.5
+                  : isQuizMode && quizResultsMap.has(district.id)
+                  ? 2
+                  : isQuizMode && hasDivScope && isInsideDivision
+                  ? 2
+                  : 1;
 
               return (
                 <path
@@ -401,21 +541,13 @@ export const MapBangladesh: React.FC<MapBangladeshProps> = ({
                   d={district.path}
                   fill={fillColor}
                   stroke={strokeColor}
-                  strokeWidth={
-                    flashingDistrictId === district.id
-                      ? 4
-                      : isSelected
-                      ? 3.5
-                      : isHovered
-                      ? 2.5
-                      : isQuizMode && quizResultsMap.has(district.id)
-                      ? 1.8
-                      : 1
-                  }
+                  strokeWidth={strokeWidth}
                   strokeLinejoin="round"
                   strokeLinecap="round"
-                  opacity={isDimmed ? 0.35 : 1}
-                  className="cursor-pointer transition-all duration-150 ease-out"
+                  opacity={isDimmed ? (isQuizMode ? 0.22 : 0.35) : 1}
+                  className={`transition-all duration-150 ease-out ${
+                    isQuizMode && isDimmed ? "pointer-events-none cursor-default" : "cursor-pointer"
+                  }`}
                   style={{
                     filter:
                       flashingDistrictId === district.id
@@ -427,7 +559,7 @@ export const MapBangladesh: React.FC<MapBangladeshProps> = ({
                         : "none"
                   }}
                   onClick={(e) => handleDistrictClick(district, e)}
-                  onMouseEnter={() => setHoveredDistrict(district)}
+                  onMouseEnter={() => (!isDimmed ? setHoveredDistrict(district) : null)}
                   onMouseLeave={() => setHoveredDistrict(null)}
                 />
               );
